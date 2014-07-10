@@ -10,7 +10,7 @@
  *******************************************************************************/
 package com.ibm.wala.ssa;
 
-import java.util.HashMap;
+import java.util.Map;
 
 import com.ibm.wala.util.collections.HashMapFactory;
 import com.ibm.wala.util.debug.Assertions;
@@ -34,9 +34,11 @@ public class SymbolTable implements Cloneable {
   /**
    * Mapping from Constant -> value number
    */
-  private HashMap<ConstantValue, Integer> constants = HashMapFactory.make(10);
+  private Map<Integer, ConstantValue> constants = HashMapFactory.make(10);
 
-  private boolean copy = false;
+  private Map<Integer, Integer> indexMap = HashMapFactory.make(10);
+  
+//  private boolean copy = false;
   
   /**
    * @param numberOfParameters in the IR .. should be ir.getNumberOfParameters()
@@ -75,18 +77,27 @@ public class SymbolTable implements Cloneable {
    */
   int findOrCreateConstant(Object o) {
     ConstantValue v = new ConstantValue(o);
-    Integer result = constants.get(v);
-    if (result == null) {
-      assert ! copy : "making value for " + o;
-      int r = getNewValueNumber();
-      result = Integer.valueOf(r);
-      constants.put(v, result);
-      assert r < nextFreeValueNumber;
-      values[r] = v;
-    } else {
-      assert values[result.intValue()] instanceof ConstantValue;
-    }
-    return result.intValue();
+    
+    int newValueNumber = getNewValueNumber();
+    
+    values[newValueNumber] = v;
+    constants.put(newValueNumber, v);
+    
+    assert newValueNumber < nextFreeValueNumber;
+    
+    return newValueNumber;
+//    Integer result = constants.get(v);
+//    if (result == null) {
+//      assert ! copy : "making value for " + o;
+//      int r = getNewValueNumber();
+//      result = Integer.valueOf(r);
+//      constants.put(v, result);
+//      assert r < nextFreeValueNumber;
+//      values[r] = v;
+//    } else {
+//      assert values[result.intValue()] instanceof ConstantValue;
+//    }
+//    return result.intValue();
 
   }
 
@@ -449,11 +460,23 @@ public class SymbolTable implements Cloneable {
         nt.defaultValues = this.defaultValues.clone();
       }
       nt.constants = HashMapFactory.make(this.constants);
-      nt.copy = true;
+//      nt.copy = true;
       return nt;
     } catch (CloneNotSupportedException e) {
       Assertions.UNREACHABLE();
       return null;
     }
+  }
+
+  public void setIndex(int symbol, int index) {
+    Integer old = indexMap.put(symbol, index);
+    
+    if (old != null) {
+      Assertions.UNREACHABLE();
+    }
+  }
+
+  public Integer getIndex(int v) {
+    return indexMap.get(v);
   }
 }

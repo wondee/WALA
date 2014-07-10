@@ -516,6 +516,9 @@ public class SSABuilder extends AbstractIntStackMachine {
         } else {
           Assertions.UNREACHABLE("unexpected " + type);
         }
+        
+        symbolTable.setIndex(symbol, getCurrentInstructionIndex());
+        
         workingState.push(symbol);
       }
 
